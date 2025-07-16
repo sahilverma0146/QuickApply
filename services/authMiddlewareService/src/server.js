@@ -23,25 +23,24 @@ try {
 }
 
 
-const authController = require("./controller/userController");
+const authMiddleware = require("./middleware/authMiddleware");
 
-app.post("/register", authController.Register);
-app.post("/login", authController.Login);
+// Protect a route using the auth middleware
+app.get('/authMiddleware', authMiddleware.authMiddleware);
 
-
-// write the routes by which we gt  the events from the event bus 
-
+// Receive event from Event Bus
 app.post("/events", (req, res) => {
-  const { event } = req.body;
-  console.log("Event received by auth-service:", event);
+  const { data } = req.body;
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(" ")[1];
 
-  // You can handle specific events here
-  // if (event.type === "UserUpdated") { ... }
+  console.log(" Event received at auth-middleware service:", data);
+  console.log(" Token from header:", token);
 
-  res.status(200).json({ message: "Event received by auth-service" });
+  res.status(200).json({ message: "Event received" });
 });
 
-const port = 4000;
+const port = 4002;
 app.listen(port, () => {
-  console.log("the authservice is running at 4000");
+  console.log("the authservice is running at 4002");
 });
