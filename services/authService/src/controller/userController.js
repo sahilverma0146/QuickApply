@@ -8,15 +8,17 @@ const userModel = model.userModel;
 
 exports.Register = async (req, res) => {
   try {
-    const { firstName, lastName, email, password, role } = req.body;
+    const { firstName, lastName, email, password } = req.body;
 
-    if (!firstName || !lastName || !email || !password || !role) {
+    if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
         success: false,
         message:
-          "All fields (firstName, lastName, email, password, role) are required",
+          "All fields (firstName, lastName, email, password) are required",
       });
     }
+
+    const role = email.endsWith("@admin.com") ? "director" : "student";
 
     const token = jwt.sign({ role }, "shhhhh");
     console.log(token, "JWT token created during registration");
@@ -32,13 +34,19 @@ exports.Register = async (req, res) => {
       email,
       password: hashedPassword,
       role,
+      token,
     });
 
     await data.save();
 
-    
+    // this will give us thee event sent successfully
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      data,
+    });
     // emit an event
-    console.log("going to emit")
+    console.log("going to emit");
     await fetch("http://localhost:4004/events", {
       method: "POST",
       headers: {
@@ -47,23 +55,16 @@ exports.Register = async (req, res) => {
       },
       body: JSON.stringify({
         event: {
-          type: "UserCreated",
+          type: "USERCREATED",
           data: {
             userId: data._id,
             email: data.email,
             role: data.role,
+            token : data.token
           },
         },
       }),
     });
-
-    // this will give us thee event sent successfully 
-    res.status(201).json({
-      success: true,
-      message: "User created successfully",
-      data,
-    });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -77,7 +78,6 @@ exports.Login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Validate input
     if (!email || !password) {
       return res.status(400).json({
         message: "Please enter both email and password.",
@@ -85,32 +85,68 @@ exports.Login = async (req, res) => {
       });
     }
 
-    // 2. Fetch user
-    const fetchUser = await userModel.findOne({ email });
+    const data = await userModel.findOne({ email });
 
-    if (!fetchUser) {
+    if (!data) {
       return res.status(401).json({
         message: "Email is not registered.",
         success: false,
       });
     }
+    const token = jwt.sign(
+      {
+        id: data.id,
+        email: data.email,
+        role: data.role,
+        userName: data.userName,
+      },
+      "sshshhhhhhh",
+      { expiresIn: "1h" }
+    );
 
-    // 3. Compare password
-    const isMatch = await bcrypt.compare(password, fetchUser.password);
+    const isMatch = await bcrypt.compare(password, data.password);
 
     if (!isMatch) {
       return res.status(401).json({
         message: "Incorrect password.",
         success: false,
+        token,
       });
     }
 
-    // 4. Login successful
-    return res.status(200).json({
+    res.status(200).json({
       message: "User logged in successfully.",
       success: true,
-      user: fetchUser,
+      data,
     });
+
+    // this emit an event to event bus
+    console.log("going to emit");
+    await fetch("http://localhost:4004/events", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // Authorization: `bearer ${token}`,
+      },
+      body: JSON.stringify({
+        event: {
+          type: "UserCreated",
+          data: {
+            userId: data._id,
+            email: data.email,
+            role: data.role,
+            token : data.token
+          },
+        },
+      }),
+    });
+
+    res.status(200).json({
+      message: "User logged in successfully.",
+      success: true,
+      data,
+    });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({

@@ -14,6 +14,7 @@ const UserSchema = new mongoose.Schema(
       enum: ["student", "director"],
       required: true,
     },
+    token : {type:String},
     registeredJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Job" }],
   },
   { timestamps: true }

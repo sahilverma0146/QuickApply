@@ -10,7 +10,6 @@ const JobModel = model.jobModel;
 const modelTwo = require("../model/UserRegisterForJob");
 const JobRegistrationModel = modelTwo.JobApplicationRegistration;
 
-
 // admin post the new job
 exports.JobListing = async (req, res) => {
   try {
@@ -67,6 +66,37 @@ exports.JobListing = async (req, res) => {
       success: true,
       job: newJob,
     });
+
+    // emit an event to the event bus
+    // 4. Emit event to Event Bus
+    try {
+      console.log("Emitting SHOWJOBS event to event bus...");
+      await fetch("http://localhost:4004/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          event: {
+            type: "POSTAJOB",
+            data: {
+              companyName : newJob.companyName,
+              jobRole : newJob.jobRole,
+              lastRegistrationDate : newJob.lastRegistrationDate,
+              onlyApplyBranches : newJob.onlyApplyBranches,
+              aboutCompany : newJob.aboutCompany,
+              requiredCGPA : newJob.requiredCGPA,
+              requiredSkills : newJob.requiredSkills,
+              ctc : newJob.ctc,
+              location : newJob.location,
+              jobType : newJob.jobType,
+            },
+          },
+        }),
+      });
+    } catch (eventError) {
+      console.error("Error emitting to event bus:", eventError.message);
+    }
   } catch (error) {
     console.error("Error while posting job:", error);
     res.status(500).json({
@@ -115,6 +145,51 @@ exports.UserRegisterForTheJob = async (req, res) => {
       message: "Something went wrong",
       success: false,
       error: error.message,
+    });
+  }
+};
+
+exports.showAllJobs = async (req, res) => {
+  try {
+    const data = await JobModel.find();
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({
+        message: "No jobs found.",
+        success: false,
+      });
+    }
+
+    res.status(200).json({
+      message: "All jobs fetched successfully",
+      success: true,
+      data,
+    });
+
+    // 4. Emit event to Event Bus
+    try {
+      console.log("Emitting SHOWJOBS event to event bus...");
+      await fetch("http://localhost:4004/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          event: {
+            type: "SHOWALLJOBS",
+            DataTransferItem,
+          },
+        }),
+      });
+    } catch (eventError) {
+      console.error("Error emitting to event bus:", eventError.message);
+    }
+  } catch (err) {
+    // 5. Handle DB or server errors
+    console.error("Error fetching jobs:", err.message);
+    res.status(500).json({
+      message: "Server error while fetching jobs.",
+      success: false,
     });
   }
 };

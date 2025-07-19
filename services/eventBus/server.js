@@ -62,18 +62,18 @@ app.post("/events", async (req, res) => {
   }
 
   // emit event for job posting service
-  // try {
-  //   fetch("http://localhost:4001/events", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Authorization: authHeader,
-  //     },
-  //     body: JSON.stringify(event),
-  //   });
-  // } catch (error) {
-  //   console.log(error);
-  // }
+  try {
+    await fetch("http://localhost:4001/events", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // Authorization: authHeader,
+      },
+      body: JSON.stringify(event),
+    });
+  } catch (error) {
+    console.log(error);
+  }
 
   // emit event for query service
   // try {
