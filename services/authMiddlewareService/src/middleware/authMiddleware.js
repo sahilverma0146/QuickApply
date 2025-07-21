@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-exports.authMiddleware = async (req, res , next) => {
+exports.authMiddleware = async (req, res) => {
   try {
     const authHeader = req.headers.authorization; // this is a string bearer toekn
 
@@ -16,8 +16,6 @@ exports.authMiddleware = async (req, res , next) => {
     console.log("the decoded user is ", decoded);
     req.user = decoded;
 
-    next();
-
 
     // emit an event
     console.log("going to emit");
@@ -28,14 +26,12 @@ exports.authMiddleware = async (req, res , next) => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        event: {
-          type: "userDetailsFetched",
-          data: {
-            userId: decoded._id,
-            email: decoded.email,
-            role: decoded.role,
-          },
-        },
+        type: "userDetailsFetched",
+        data: {
+          userId: decoded._id,
+          email: decoded.email,
+          role: decoded.role,
+        }, 
       }),
     });
   } catch (error) {

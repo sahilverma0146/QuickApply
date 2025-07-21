@@ -4,6 +4,7 @@ const app = express();
 const mongoose = require("mongoose");
 
 const cors = require("cors");
+
 app.use(express.json());
 
 app.use(cors());
@@ -24,17 +25,25 @@ try {
 }
 
 const jobController = require("./controller/JobController");
-
+const jobMiddleware = require("./controller/middleware")
 app.post("/JobListing", jobController.JobListing);
-app.post("/UserRegisterForTheJob", jobController.UserRegisterForTheJob);
-app.get("/listalljobd", jobController.showAllJobs);
 
+
+app.get('/jobList' , (req , res)=>{
+  res.status(200).json({success:true , message:"true"})
+} )
+
+
+app.post("/UserRegisterForTheJob", jobController.UserRegisterForTheJob);
+app.post("/ListAllJobs", jobController.showAllJobs);
+
+app.get('/deleteJob/:id' ,jobMiddleware.authMiddleware ,  jobController.deleteJob);
 // capture the event from event bus
 app.post("/events", (req, res) => {
   const { type, data } = req.body;
 
-  console.log("Event Type:", type);
-  console.log("Event Data:", data);
+  // console.log("Event Type at job-post-service:", type);
+  // console.log("Event Data:", data);
 
   if (type === "POSTAJOB") {
     console.log("Inside POSTAJOB handler");
@@ -43,14 +52,22 @@ app.post("/events", (req, res) => {
 
   if (type === "TOKENDECODED") {
     console.log("Inside TOKENDECODED handler");
-    console.log("Decoded Token Role:", data?.role);
+    console.log("Decoded Token Role:", data);
     // You can handle decoded token logic here
+  }
+
+  if (type === "USERLOGGEDIN") {
+    console.log("inside the job service capture the event", type);
+    console.log(" inside the userloggedin grab event ", data);
+  }
+
+  if (type === "SHOWALLJOBS") {
+    console.log("inside the job service capture the event", type);
+    console.log(" inside the userloggedin grab event ", data);
   }
 
   res.send({});
 });
-
-
 
 const port = 4001;
 app.listen(port, () => {

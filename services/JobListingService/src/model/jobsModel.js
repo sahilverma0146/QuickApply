@@ -3,9 +3,9 @@ const { Schema } = mongoose;
 
 const jobSchema = new Schema(
   {
-    companyName: { type: String, required: true },
-    jobRole: { type: String, required: true },
-    lastRegistrationDate: { type: Date, required: true },
+    companyName: { type: String },
+    jobRole: { type: String },
+    lastRegistrationDate: { type: Date },
     onlyApplyBranches: {
       type: String,
       enum: ["AIML", "AIDS", "Cyber_Security", "CSE", "All_Branches"],

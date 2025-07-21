@@ -32,7 +32,7 @@ app.post("/login", authController.Login);
 // write the routes by which we gt  the events from the event bus 
 
 app.post("/events", (req, res) => {
-  const { event } = req.body;
+  const  event  = req.body;
   console.log("Event received by auth-service:", event);
 
   // You can handle specific events here

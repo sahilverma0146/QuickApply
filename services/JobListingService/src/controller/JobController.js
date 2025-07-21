@@ -4,9 +4,6 @@ const { Schema } = mongoose;
 const model = require("../model/jobsModel");
 const JobModel = model.jobModel;
 
-// const model2 = require("../model/jobsModel");
-// const JobRegistration = model2.JobApplicationRegistration;
-
 const modelTwo = require("../model/UserRegisterForJob");
 const JobRegistrationModel = modelTwo.JobApplicationRegistration;
 
@@ -16,28 +13,24 @@ exports.JobListing = async (req, res) => {
     const {
       companyName,
       jobRole,
-      lastRegistrationDate,
-      onlyApplyBranches,
       aboutCompany,
       requiredCGPA,
       requiredSkills,
       ctc,
       location,
-      jobType,
+      // jobType,
     } = req.body;
 
     // Input validation
     if (
       !companyName ||
       !jobRole ||
-      !lastRegistrationDate ||
-      !onlyApplyBranches ||
       !aboutCompany ||
       !requiredCGPA ||
       !requiredSkills ||
       !ctc ||
-      !location ||
-      !jobType
+      !location
+      // !jobType
     ) {
       return res.status(400).json({
         message: "Please fill all required fields properly.",
@@ -49,14 +42,12 @@ exports.JobListing = async (req, res) => {
     const newJob = new JobModel({
       companyName,
       jobRole,
-      lastRegistrationDate,
-      onlyApplyBranches,
       aboutCompany,
       requiredCGPA,
       requiredSkills,
       ctc,
       location,
-      jobType,
+      // jobType,
     });
 
     await newJob.save();
@@ -77,20 +68,18 @@ exports.JobListing = async (req, res) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          event: {
-            type: "POSTAJOB",
-            data: {
-              companyName : newJob.companyName,
-              jobRole : newJob.jobRole,
-              lastRegistrationDate : newJob.lastRegistrationDate,
-              onlyApplyBranches : newJob.onlyApplyBranches,
-              aboutCompany : newJob.aboutCompany,
-              requiredCGPA : newJob.requiredCGPA,
-              requiredSkills : newJob.requiredSkills,
-              ctc : newJob.ctc,
-              location : newJob.location,
-              jobType : newJob.jobType,
-            },
+          type: "POSTAJOB",
+          data: {
+            companyName: newJob.companyName,
+            jobRole: newJob.jobRole,
+            lastRegistrationDate: newJob.lastRegistrationDate,
+            onlyApplyBranches: newJob.onlyApplyBranches,
+            aboutCompany: newJob.aboutCompany,
+            requiredCGPA: newJob.requiredCGPA,
+            requiredSkills: newJob.requiredSkills,
+            ctc: newJob.ctc,
+            location: newJob.location,
+            jobType: newJob.jobType,
           },
         }),
       });
@@ -149,8 +138,38 @@ exports.UserRegisterForTheJob = async (req, res) => {
   }
 };
 
+// work done for this service
 exports.showAllJobs = async (req, res) => {
   try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res
+        .status(401)
+        .json({ message: "Authorization header missing", success: false });
+    }
+
+    const token = authHeader && authHeader.split(" ")[1]; //rtsfkgjsfkgjsfjghjsftujskdfmksit0
+
+    // Step 2: Call the auth-middleware
+
+    console.log("verifyrs running");
+    const decodedValue = await fetch("http://localhost:4002/authMiddleware", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const verifyData = await decodedValue.json();
+    if (!verifyData) {
+      return res.status(401).json({ message: "decoded value not found" });
+    }
+    console.log(verifyData); //{ success: true, user: { role: 'student', iat: 1752912785 } }
+
+    console.log("now the jobs seaching");
+
+    // main code
     const data = await JobModel.find();
 
     if (!data || data.length === 0) {
@@ -164,6 +183,8 @@ exports.showAllJobs = async (req, res) => {
       message: "All jobs fetched successfully",
       success: true,
       data,
+      token,
+      verifyData,
     });
 
     // 4. Emit event to Event Bus
@@ -175,10 +196,8 @@ exports.showAllJobs = async (req, res) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          event: {
-            type: "SHOWALLJOBS",
-            DataTransferItem,
-          },
+          type: "SHOWALLJOBS",
+          data,
         }),
       });
     } catch (eventError) {
@@ -191,5 +210,32 @@ exports.showAllJobs = async (req, res) => {
       message: "Server error while fetching jobs.",
       success: false,
     });
+  }
+};
+
+
+// route to delete a particular job 
+exports.deleteJob = async (req, res) => {
+  try {
+    const jobId = req.params.id; 
+    const role = req.role;
+
+    if(role === "director"){
+      
+    const deletedJob = await JobModel.findByIdAndDelete(jobId);
+
+    if (!deletedJob) {
+      return res.status(404).json({ message: "No job found for this ID", success: false });
+    }
+
+    return res.status(200).json({ message: "Job deleted successfully", success: true, deletedJob });
+    }
+
+    res.status(404).json({message:"you are not specified for deleteing the job"})
+    
+    // cosnt {id} = req.params  this is destructuring the id from the req.params
+
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", success: false, error: error.message });
   }
 };

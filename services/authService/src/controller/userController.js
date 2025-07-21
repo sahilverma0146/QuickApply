@@ -54,14 +54,13 @@ exports.Register = async (req, res) => {
         Authorization: `bearer ${token}`,
       },
       body: JSON.stringify({
-        event: {
-          type: "USERCREATED",
-          data: {
-            userId: data._id,
-            email: data.email,
-            role: data.role,
-            token : data.token
-          },
+        type: "USERCREATED",
+
+        data: {
+          userId: data._id,
+          email: data.email,
+          role: data.role,
+          token: data.token,
         },
       }),
     });
@@ -100,7 +99,7 @@ exports.Login = async (req, res) => {
         role: data.role,
         userName: data.userName,
       },
-      "sshshhhhhhh",
+      "shhhhh",
       { expiresIn: "1h" }
     );
 
@@ -114,10 +113,14 @@ exports.Login = async (req, res) => {
       });
     }
 
+    data.token = token;
+    data.save();
+
     res.status(200).json({
       message: "User logged in successfully.",
       success: true,
       data,
+      token,
     });
 
     // this emit an event to event bus
@@ -129,24 +132,15 @@ exports.Login = async (req, res) => {
         // Authorization: `bearer ${token}`,
       },
       body: JSON.stringify({
-        event: {
-          type: "UserCreated",
-          data: {
-            userId: data._id,
-            email: data.email,
-            role: data.role,
-            token : data.token
-          },
+        type: "USERLOGGEDIN",
+        data: {
+          userId: data._id,
+          email: data.email,
+          role: data.role,
+          token: data.token,
         },
       }),
     });
-
-    res.status(200).json({
-      message: "User logged in successfully.",
-      success: true,
-      data,
-    });
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({
