@@ -12,6 +12,7 @@ exports.authMiddleware = async(req, res , next) =>{
     const decoded = jwt.verify(token, 'shhhhh');
     console.log(decoded);
     req.role = decoded.role;
+    req.id = decoded.id
     next()
 
 }

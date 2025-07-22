@@ -20,9 +20,6 @@ exports.Register = async (req, res) => {
 
     const role = email.endsWith("@admin.com") ? "director" : "student";
 
-    const token = jwt.sign({ role }, "shhhhh");
-    console.log(token, "JWT token created during registration");
-
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -34,28 +31,35 @@ exports.Register = async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      token,
     });
 
     await data.save();
 
-    // this will give us thee event sent successfully
-    res.status(201).json({
-      success: true,
-      message: "User created successfully",
-      data,
-    });
-    // emit an event
-    console.log("going to emit");
+    const token = jwt.sign(
+      {
+        id: data._id,
+        firstName,
+        lastName,
+        email,
+        role,
+      },
+      "shhhhh",
+      { expiresIn: "1d" }
+    );
+
+    // 7. Store token in DB
+    data.token = token;
+    await data.save();
+
+    // 8. Emit USERCREATED event
     await fetch("http://localhost:4004/events", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         type: "USERCREATED",
-
         data: {
           userId: data._id,
           email: data.email,
@@ -64,10 +68,17 @@ exports.Register = async (req, res) => {
         },
       }),
     });
+
+    // 9. Send response
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      data
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Getting error in registering the user",
+      message: "Error in registering user",
       error: error.message,
     });
   }

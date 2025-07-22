@@ -7,7 +7,7 @@ const JobModel = model.jobModel;
 const modelTwo = require("../model/UserRegisterForJob");
 const JobRegistrationModel = modelTwo.JobApplicationRegistration;
 
-// admin post the new job
+// post the new job
 exports.JobListing = async (req, res) => {
   try {
     const {
@@ -98,33 +98,33 @@ exports.JobListing = async (req, res) => {
 // user register himself for that job
 exports.UserRegisterForTheJob = async (req, res) => {
   try {
-    // Got userId from auth middleware (req.user._id), jobId from frontend
-    const { userId, jobId } = req.body;
+    const id = req.id; // user ID set from auth middleware
+    const { jobId } = req.body;
 
-    if (!userId || !jobId) {
-      return res.status(400).json({
-        message: "userId and jobId are required",
+    if (!id || !jobId) {
+      return res
+        .status(400)
+        .json({ message: "userId and jobId are required", success: false });
+    }
+
+    const alreadyApplied = await JobRegistrationModel.findOne({ userId: id, jobId });
+
+    if (alreadyApplied) {
+      return res.status(200).json({
+        message: "You have already applied for this job.",
         success: false,
       });
     }
 
-    // const alreadyApplied = await JobApplicationRegistration.find({ userId, jobId });
-    // if (alreadyApplied) {
-    //   return res.status(409).json({
-    //     message: "User already applied for this job",
-    //     success: false,
-    //   });
-    // }
-
     const applyForJob = new JobRegistrationModel({
-      userId,
+      userId: id,
       jobId,
     });
 
     await applyForJob.save();
 
     return res.status(200).json({
-      message: "User applied for job successfully",
+      message: "Applied for this job successfully",
       success: true,
       applyForJob,
     });
@@ -137,6 +137,7 @@ exports.UserRegisterForTheJob = async (req, res) => {
     });
   }
 };
+
 
 // work done for this service
 exports.showAllJobs = async (req, res) => {
@@ -152,7 +153,6 @@ exports.showAllJobs = async (req, res) => {
 
     // Step 2: Call the auth-middleware
 
-    console.log("verifyrs running");
     const decodedValue = await fetch("http://localhost:4002/authMiddleware", {
       method: "GET",
       headers: {
@@ -213,29 +213,85 @@ exports.showAllJobs = async (req, res) => {
   }
 };
 
-
-// route to delete a particular job 
+// route to delete a particular job
 exports.deleteJob = async (req, res) => {
   try {
-    const jobId = req.params.id; 
+    const jobId = req.params.id;
     const role = req.role;
 
-    if(role === "director"){
-      
-    const deletedJob = await JobModel.findByIdAndDelete(jobId);
+    if (role === "director") {
+      const deletedJob = await JobModel.findByIdAndDelete(jobId);
 
-    if (!deletedJob) {
-      return res.status(404).json({ message: "No job found for this ID", success: false });
+      if (!deletedJob) {
+        return res
+          .status(404)
+          .json({ message: "No job found for this ID", success: false });
+      }
+
+      return res.status(200).json({
+        message: "Job deleted successfully",
+        success: true,
+        deletedJob,
+      });
     }
 
-    return res.status(200).json({ message: "Job deleted successfully", success: true, deletedJob });
-    }
+    res
+      .status(404)
+      .json({ message: "you are not specified for deleteing the job" });
 
-    res.status(404).json({message:"you are not specified for deleteing the job"})
-    
     // cosnt {id} = req.params  this is destructuring the id from the req.params
-
   } catch (error) {
-    res.status(500).json({ message: "Server Error", success: false, error: error.message });
+    res
+      .status(500)
+      .json({ message: "Server Error", success: false, error: error.message });
   }
 };
+
+// updating the particular job
+exports.updateJob = async (req, res) => {
+  const jobId = req.params.id;
+  const role = req.role;
+  const data = req.body; // here data becomes an object
+
+  if (role === "director") {
+    const updateJob = await JobModel.findByIdAndUpdate(jobId, { $set: data });
+    if (!updateJob) {
+      return res.status(404).json({ message: "jobUpdatation failed" });
+    }
+    res.status(200).json({ message: "job Updated Successfully" });
+  }
+};
+
+// finding all the users which applied for the job 
+exports.fetchAllRegisteredUsers = async (req , res) =>{
+  const jobId = req.params.jobId;
+
+  // token
+  const role = req.role; 
+  if(role === 'director'){
+
+    const appliedUsers = await JobRegistrationModel.find({jobId : jobId});
+    if(!appliedUsers){
+      return res.status(200).json({message:"n one applied fro this job" , success:true});
+    }
+
+    res.status(200).json({message:"the list of users are" , success:true  , appliedUsers})
+
+  }else{
+    res.status(404).json({message:"You are not able to get the data"});
+  }
+
+}
+
+// fetch all applied jobs directly 
+exports.fetchAllAppliedJobsOfAParticularUser =async (req, res)=>{
+
+  const id = req.id;
+
+  const jobs = await JobRegistrationModel.findOne({userId : id});
+  if(!jobs){
+    return res.status(404).json({message:"no jobs applied by this user" , success : false})
+  }
+  res.status(200).json({message:"the applied jobs are" , success : true , jobs} )
+
+}

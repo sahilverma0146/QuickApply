@@ -29,15 +29,17 @@ const jobMiddleware = require("./controller/middleware")
 app.post("/JobListing", jobController.JobListing);
 
 
-app.get('/jobList' , (req , res)=>{
-  res.status(200).json({success:true , message:"true"})
-} )
 
-
-app.post("/UserRegisterForTheJob", jobController.UserRegisterForTheJob);
+app.post("/UserRegisterForTheJob", jobMiddleware.authMiddleware ,  jobController.UserRegisterForTheJob);
 app.post("/ListAllJobs", jobController.showAllJobs);
 
 app.get('/deleteJob/:id' ,jobMiddleware.authMiddleware ,  jobController.deleteJob);
+app.patch('/updateJob/:id' ,jobMiddleware.authMiddleware , jobController.updateJob)
+
+app.get('/fetchAllRegisteredUsers/:jobId' ,jobMiddleware.authMiddleware ,  jobController.fetchAllRegisteredUsers)
+
+app.get('/fetchAllAppliedJobsOfAParticularUser' , jobMiddleware.authMiddleware , jobController.fetchAllAppliedJobsOfAParticularUser)
+
 // capture the event from event bus
 app.post("/events", (req, res) => {
   const { type, data } = req.body;

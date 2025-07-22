@@ -28,12 +28,12 @@ const authMiddleware = require("./middleware/authMiddleware");
 // Protect a route using the auth middleware
 // app.get("/authMiddleware", authMiddleware.authMiddleware);
 
-
-
 app.get("/authMiddleware", (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ success: false, message: "No token provided" });
+    return res
+      .status(401)
+      .json({ success: false, message: "No token provided" });
   }
 
   const token = authHeader.split(" ")[1];
@@ -52,9 +52,9 @@ app.get("/authMiddleware", (req, res) => {
 // Receive event from Event Bus
 app.post("/events", async (req, res) => {
   const { type, data } = req.body;
-    console.log("the data received from the event bus ", type);
+  // console.log("the data received from the event bus ", type);
 
-  console.log("the data received from the event bus ", data);
+  // console.log("the data received from the event bus ", data);
 
   if (type === "USERCREATED") {
     try {
