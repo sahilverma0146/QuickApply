@@ -142,38 +142,11 @@ exports.UserRegisterForTheJob = async (req, res) => {
 // work done for this service
 exports.showAllJobs = async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res
-        .status(401)
-        .json({ message: "Authorization header missing", success: false });
-    }
-
-    const token = authHeader && authHeader.split(" ")[1]; //rtsfkgjsfkgjsfjghjsftujskdfmksit0
-
-    // Step 2: Call the auth-middleware
-
-    const decodedValue = await fetch("http://localhost:4002/authMiddleware", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const verifyData = await decodedValue.json();
-    if (!verifyData) {
-      return res.status(401).json({ message: "decoded value not found" });
-    }
-    console.log(verifyData); //{ success: true, user: { role: 'student', iat: 1752912785 } }
-
-    console.log("now the jobs seaching");
-
-    // main code
+    
     const data = await JobModel.find();
 
     if (!data || data.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         message: "No jobs found.",
         success: false,
       });
@@ -183,8 +156,6 @@ exports.showAllJobs = async (req, res) => {
       message: "All jobs fetched successfully",
       success: true,
       data,
-      token,
-      verifyData,
     });
 
     // 4. Emit event to Event Bus
@@ -283,12 +254,13 @@ exports.fetchAllRegisteredUsers = async (req , res) =>{
 
 }
 
-// fetch all applied jobs directly 
+// fetch all applied jobs irectly 
 exports.fetchAllAppliedJobsOfAParticularUser =async (req, res)=>{
 
-  const id = req.id;
+  const id = req.id; //USER ID
+  const jobId  = "687e6d1fa0f8cafed1f65eda";
 
-  const jobs = await JobRegistrationModel.findOne({userId : id});
+ const jobs = await JobRegistrationModel.find({ userId  :id }).populate("jobId");
   if(!jobs){
     return res.status(404).json({message:"no jobs applied by this user" , success : false})
   }

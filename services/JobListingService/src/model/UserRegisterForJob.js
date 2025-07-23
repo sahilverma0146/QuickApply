@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 const {Schema} = mongoose;
 
+const model = require('./UserModel');
+const userModel = model.userModel;
+
+const model2 = require('./jobsModel');
+const jobModel = model2.jobModel;
 
 const JobApplicationSchema = new Schema({
   jobId: {

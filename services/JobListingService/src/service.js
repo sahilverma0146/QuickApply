@@ -31,7 +31,8 @@ app.post("/JobListing", jobController.JobListing);
 
 
 app.post("/UserRegisterForTheJob", jobMiddleware.authMiddleware ,  jobController.UserRegisterForTheJob);
-app.post("/ListAllJobs", jobController.showAllJobs);
+
+app.get("/ListAllJobs", jobController.showAllJobs);
 
 app.get('/deleteJob/:id' ,jobMiddleware.authMiddleware ,  jobController.deleteJob);
 app.patch('/updateJob/:id' ,jobMiddleware.authMiddleware , jobController.updateJob)

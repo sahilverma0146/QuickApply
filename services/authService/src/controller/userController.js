@@ -44,7 +44,7 @@ exports.Register = async (req, res) => {
         role,
       },
       "shhhhh",
-      { expiresIn: "1d" }
+      { expiresIn: "7d" }
     );
 
     // 7. Store token in DB
