@@ -14,17 +14,18 @@ const jobSchema = new Schema(
     aboutCompany: { type: String },
     requiredCGPA: { type: Number },
     requiredSkills: { type: String },
-    ctc: { type: Number },
+    ctc: { type: String },
     location: { type: String },
     jobType: {
       type: String,
       enum: ["Internship", "FullTime"],
       default: "FullTime",
     },
-    // postedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    
+    postedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     // registeredStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );
 
-exports.jobModel = mongoose.model('jobModel' ,jobSchema )
+exports.jobModel = mongoose.model("jobModel", jobSchema);

@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-srv-deployment-new
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-new-new
+  template:
+    metadata:
+      labels:
+        app: user-new-new
+    spec:
+      containers:
+        - name: user-new-new
+          image: sahil/authservice:0.0.1
+          

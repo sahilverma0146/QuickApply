@@ -26,7 +26,7 @@ try {
 
 const jobController = require("./controller/JobController");
 const jobMiddleware = require("./controller/middleware")
-app.post("/JobListing", jobController.JobListing);
+app.post("/JobListing", jobMiddleware.authMiddleware ,  jobController.JobListing);
 
 
 
@@ -37,10 +37,12 @@ app.get("/ListAllJobs", jobController.showAllJobs);
 app.get('/deleteJob/:id' ,jobMiddleware.authMiddleware ,  jobController.deleteJob);
 app.patch('/updateJob/:id' ,jobMiddleware.authMiddleware , jobController.updateJob)
 
-app.get('/fetchAllRegisteredUsers/:jobId' ,jobMiddleware.authMiddleware ,  jobController.fetchAllRegisteredUsers)
+app.get(' teredUsers/:jobId' ,jobMiddleware.authMiddleware ,  jobController.fetchAllRegisteredUsers)
 
 app.get('/fetchAllAppliedJobsOfAParticularUser' , jobMiddleware.authMiddleware , jobController.fetchAllAppliedJobsOfAParticularUser)
 
+// this will for listing the jobs for multiple admins
+app.get('/showJobsForAdmin' , jobMiddleware.authMiddleware , jobController.showJobsForAdmin)
 // capture the event from event bus
 app.post("/events", (req, res) => {
   const { type, data } = req.body;

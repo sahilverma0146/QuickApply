@@ -28,15 +28,45 @@ const authController = require("./controller/userController");
 app.post("/register", authController.Register);
 app.post("/login", authController.Login);
 
+app.post('/otp' , authController.otpLogin)
+
+app.post('/verifyOtp',authController.verifyOtp)
+
 
 // write the routes by which we gt  the events from the event bus 
-
 app.post("/events", (req, res) => {
-  const  event  = req.body;
-  console.log("Event received by auth-service:", event);
+  const  {type , data}  = req.body;
+  console.log("Event received by auth-service:", type);
 
-  // You can handle specific events here
-  // if (event.type === "UserUpdated") { ... }
+  if(type === "OTP-SENT"){
+    console.log("the otp we got is" , data);
+
+    // this will emit a new event to event-bus
+    fetch("http://localhost:4004/events" , {
+      method:"post",
+      headers :{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        type:"VERIFY-OTP",
+        data : data
+      })
+    })
+  }
+  
+  if(type === "VERIFY-OTP"){
+    console.log(data ," your otp sie")
+    // // sent that data to a particular route
+    // fetch("http://localhost:4000/verifyOtp",{
+    //   method:"POST",
+    //   headers:{
+    //     "Content-Type":"application/json"
+    //   },
+    //   body:JSON.stringify({data})
+    // })
+
+  }
+ 
 
   res.status(200).json({ message: "Event received by auth-service" });
 });

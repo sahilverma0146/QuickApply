@@ -31,7 +31,7 @@ app.post("/events", async (req, res) => {
 
   // emit event to auth service
   try {
-    console.log("📤 Sending event to auth-service...");
+    console.log(" Sending event to auth-service...");
 
     await fetch("http://localhost:4000/events", {
       method: "POST",
@@ -77,21 +77,7 @@ app.post("/events", async (req, res) => {
     console.log(error);
   }
 
-  // emit event for query service
-  // try {
-  //   await fetch("http://localhost:4005/events", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Authorization: authHeader,
-  //     },
-  //     body: JSON.stringify(event),
-  //   });
-  // ;
-  // } catch (error) {
-  //   console.log(error);
-  // }
-
+  
   return res.status(200).json({
     success: true,
     message: "Event sent to all services",

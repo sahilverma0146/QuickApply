@@ -1,0 +1,10 @@
+apiVersion : v1
+kind : Pod
+metadata :
+  name : user-new
+spec :
+  containers :
+    - name : user-new
+      image : sahil/authservice:0.0.1
+      
+      
